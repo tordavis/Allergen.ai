@@ -11,7 +11,7 @@ st.header('Allergen Identifier for Food Dishes')
 
 # pull in sample node 1 output for testing purposes
 # will be replaced with code to run model on user-entered dish name
-node1_sample_url = 'https://github.com/UC-Berkeley-I-School/AllerGen.ai/blob/main/davinci_112_0_1_1.csv?raw=true'
+node1_sample_url = 'https://raw.githubusercontent.com/tordavis/Allergen.ai/main/davinci_112_0_1_1.csv'
 node_1_output_df = pd.read_csv(node1_sample_url, usecols=['title','model_output'])
 # make sure all ingredients are lowercase
 node_1_output_df['model_output'] = node_1_output_df['model_output'].str.lower()
