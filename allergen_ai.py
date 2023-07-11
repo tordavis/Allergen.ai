@@ -25,7 +25,7 @@ node_1_output_df = node_1_output_df.assign(**{lst_col:node_1_output_df[lst_col].
 node_1_output_exp_df = node_1_output_df.explode('model_output')
 
 # get allergens list
-allergen14 = ['celery','crustaceans','crustaceans, fish','egg','fish','gluten','lupin','milk','molluscs','mustard','none','peanuts','peanuts, sesame, soy','sesame','soy','sulphur dioxide and sulphites','tree nuts']
+allergen14 = ['celery','crustaceans','egg','fish','gluten','lupin','milk','molluscs','mustard','none','peanuts','sesame','soy','sulphur dioxide and sulphites','tree nuts']
 
 # pull in ingredients to allergens dataframe
 # node_2_url = 'https://drive.google.com/file/d/16-faxB25Cjb8dXmMqg1RGHgbhnUIZOF4/view?usp=sharing'
