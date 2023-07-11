@@ -29,8 +29,8 @@ allergen14 = ['celery','crustaceans','egg','fish','gluten','lupin','milk','mollu
 
 # pull in ingredients to allergens dataframe
 node2_sample_url = 'https://raw.githubusercontent.com/tordavis/Allergen.ai/main/open_food_facts_products_example_df.csv'
-node_2_output_df = pd.read_csv(node2_sample_url, usecols=['brands_spaces','product_name','food_spaces','allergens_from_dict'])
-node_2_output_df = node_2_output_df.rename(columns={'brands_spaces':'brand','product_name':'product','food_spaces':'ingredient','allergens_from_dict':'allergen'})
+node_2_output_df = pd.read_csv(node2_sample_url, usecols=['brands_spaces','product_name','allergens_from_dict'])
+node_2_output_df = node_2_output_df.rename(columns={'brands_spaces':'brand','product_name':'product','allergens_from_dict':'allergen'})
 
 def main():
     # dish = st.text_input('Please enter a dish name', 'Beef Stroganoff')
@@ -55,8 +55,7 @@ def main():
                 if final_df.empty:
                     st.write('Based on the products available in our dataset, we did not find any potential ingredients in this dish with', user_allergen)
                 else:
-                    
-                    final_df.drop_duplicates()
+                    final_df = final_df.drop_duplicates()
                     st.write('### Ingredients with Allergen Present', final_df.sort_index())
                     # user_ingredient = st.selectbox('Please select an ingredient',allergen_df.ingredient.unique())
                     # ingredient_df = allergen_df.loc[allergen_df.ingredient == user_ingredient]
