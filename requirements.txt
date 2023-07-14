@@ -1,5 +1,13 @@
 # requirements.txt
+
+#### S3 Connection ####
 # install s3fs
 s3fs==2023.6.0
 # Direct pypi install coming soon
 git+https://github.com/streamlit/files-connection
+
+#### Fuzzy Matching ####
+
+fuzzywuzzy
+python-Levenshtein
+textblob
