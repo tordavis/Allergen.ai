@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
+import s3fs
 
 # set up page name
 st.set_page_config(page_title = 'Allergen.ai', page_icon='🍤')
@@ -28,9 +29,13 @@ node_1_output_exp_df = node_1_output_df.explode('model_output')
 allergen14 = ['celery','crustaceans','egg','fish','gluten','lupin','milk','molluscs','mustard','none','peanuts','sesame','soy','sulphur dioxide and sulphites','tree nuts']
 
 # pull in ingredients to allergens dataframe
-node2_sample_url = 'https://raw.githubusercontent.com/tordavis/Allergen.ai/main/open_food_facts_products_example_df.csv'
-node_2_output_df = pd.read_csv(node2_sample_url, usecols=['brands_spaces','product_name','allergens_from_dict'])
-node_2_output_df = node_2_output_df.rename(columns={'brands_spaces':'brand','product_name':'product','allergens_from_dict':'allergen'})
+# will be replaced with s3
+fs = s3fs.S3FileSystem(anon=False)
+def read_file(filename):
+    with fs.open(filename) as f:
+        return pd.read_csv(f,usecols=['brands_spaces','product_name','allergens_from_dict'])
+off_df = read_file("toridavis-test-8675309/open_food_facts_products_example_df.csv")
+off_df = off_df.rename(columns={'brands_spaces':'brand','product_name':'product','allergens_from_dict':'allergen'})
 
 def main():
     # dish = st.text_input('Please enter a dish name', 'Beef Stroganoff')
@@ -40,18 +45,22 @@ def main():
     # just keep node 1 results that match dish selected
     dish_selected = node_1_output_exp_df[node_1_output_exp_df.title == dish]
     dish_ingredients = dish_selected.model_output.tolist()
+    st.write('Here are the ingredients we have identified in your dish')
     dish_ingredients = [i.lstrip() for i in dish_ingredients]
+    for i in dish_ingredients:
+        st.markdown("- " + i)
 
-    node_2_curated = node_2_output_df[node_2_output_df['product'].isin(dish_ingredients)]
+    # insert spell check, etc. to check node 1 output
+    off_df_curated = off_df[off_df['product'].isin(dish_ingredients)]
 
-    user_allergen = st.selectbox('Please select an allergen',allergen14)
+    user_allergen = st.selectbox('Please select an allergen to show the products containing it:',allergen14)
 
     if st.button('Show ingredients with this allergen'):
         if dish:
             if len(node_1_output_exp_df) == 0:
                 st.write('No dishes found.')
             else:
-                final_df = node_2_curated.loc[node_2_curated.allergen == user_allergen]
+                final_df = off_df_curated.loc[off_df_curated.allergen == user_allergen]
                 if final_df.empty:
                     st.write('Based on the products available in our dataset, we did not find any potential ingredients in this dish with', user_allergen)
                 else:
