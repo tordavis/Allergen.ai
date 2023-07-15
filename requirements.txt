@@ -11,3 +11,4 @@ git+https://github.com/streamlit/files-connection
 fuzzywuzzy
 python-Levenshtein
 textblob
+nltk
