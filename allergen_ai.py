@@ -82,17 +82,24 @@ node_1_output_exp_df = node_1_output_df.explode("model_output")
 
 #### OpenFoodFacts Reference File ####
 
-# set up file system interface
-fs = s3fs.S3FileSystem(anon=False)
-# create definition for reading file from s3
-def read_file(filename):
-    with fs.open(filename) as f:
-        # only pull in certain columns
-        return pd.read_csv(
-            f, usecols=["product_name", "brands_tags", "allergens_from_dict"]
-        )
+## Using S3 Bucket ##
+# # set up file system interface
+# fs = s3fs.S3FileSystem(anon=False)
+# # create definition for reading file from s3
+# def read_file(filename):
+#     with fs.open(filename) as f:
+#         # only pull in certain columns
+#         return pd.read_csv(
+#             f, usecols=["product_name", "brands_tags", "allergens_from_dict"]
+#         )
+# # read the ingredient to allergen OpenFoodFacts file
+# off_df = read_file("toridavis-test-8675309/off_products_final_df.csv")
+
+## Using GitHub ##
 # read the ingredient to allergen OpenFoodFacts file
-off_df = read_file("toridavis-test-8675309/off_products_allergens_only_final_df.csv")
+url = "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/datasets/off_products_final_df.csv"
+off_df = pd.read_csv(url, usecols=["product_name", "brands_tags", "allergens_from_dict"])
+
 # rename the columns to be more user friendly
 off_df = off_df.rename(
     columns={
