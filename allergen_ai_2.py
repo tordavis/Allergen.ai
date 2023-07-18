@@ -24,7 +24,6 @@ from io import BytesIO
 ##############################################################################
 
 ##### Page Set Up #####
-
 # set up page name
 st.set_page_config(page_title="Allergen.ai", page_icon="🍤")
 # set up title on the web application
@@ -56,15 +55,6 @@ allergen14 = [
 
 ##############################################################################
 
-#### Get Image ####
-
-def get_image():
-    url = "https://github.com/tordavis/Allergen.ai/blob/main/almond.jpeg?raw=true"
-    r = requests.get(url)
-    return BytesIO(r.content)
-
-##############################################################################
-
 #### Node 1 - Recipe Generator ####
 
 # pull in sample node 1 output for testing purposes
@@ -88,6 +78,44 @@ node_1_output_df = node_1_output_df.assign(
 )
 # explode ingredients into their own rows
 node_1_output_exp_df = node_1_output_df.explode("model_output")
+
+# maybe revisit redis cache checking if user inputs same dish twice
+
+##############################################################################
+
+#### OpenFoodFacts Reference File ####
+
+# @st.cache_data
+def off_reference():
+
+    ## Using GitHub ##
+    # read the ingredient to allergen OpenFoodFacts file
+    url = "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/datasets/off_products_final_df.csv"
+    off_df = pd.read_csv(url, usecols=["product_name", "brands_tags", "allergens_from_dict"])
+
+    # rename the columns to be more user friendly
+    off_df = off_df.rename(
+        columns={
+            "product_name": "product",
+            "brands_tags": "brand",
+            "allergens_from_dict": "allergen",
+        }
+    )
+
+    return off_df
+
+    ## Using S3 Bucket ##
+    # # set up file system interface
+    # fs = s3fs.S3FileSystem(anon=False)
+    # # create definition for reading file from s3
+    # def read_file(filename):
+    #     with fs.open(filename) as f:
+    #         # only pull in certain columns
+    #         return pd.read_csv(
+    #             f, usecols=["product_name", "brands_tags", "allergens_from_dict"]
+    #         )
+    # # read the ingredient to allergen OpenFoodFacts file
+    # off_df = read_file("toridavis-test-8675309/off_products_final_df.csv")
 
 ##############################################################################
 
@@ -244,16 +272,11 @@ def check_products_pipeline(ingredient, products_spaces, products_underscores):
 
 ##############################################################################
 
-#### Main function ####
+#### Dish Selection ####
 
-def main():
-    #### Dish Selection ####
-
-    # get user input for dish name
-    # add rules for what can be entered
-    # dish = st.text_input('Please enter a dish name', 'Beef Stroganoff')
-    st.write("#### Please Select one of the predetermined dishes")
-    dish = st.selectbox("Dish Options:", dish_list)
+def dish_selection(dish):
+    # call node 1 code
+    # recipe_generator()
 
     # will be replaced
     # just keep node 1 results that match dish selected
@@ -263,69 +286,13 @@ def main():
     # convert dish ingredients to a list
     dish_ingredients = dish_selected.model_output.tolist()
 
-    ##############################################################################
+    return dish_ingredients
 
-    #### Present Dish Ingredients to Users ####
+##############################################################################
 
-    # present user with the predicted ingredients
-    st.write("### Here are the ingredients we have identified in your dish")
-    # format list into a nice bulleted markdown
-    dish_ingredients = [i.lstrip() for i in dish_ingredients]
-    for i in dish_ingredients:
-        st.markdown("- " + i)
+#### Node 2 - Recipe Ingredient Matching ####
 
-    ##############################################################################
-
-    #### Generate Products ####
-    
-    # st.write("#### Would you like to see the products related to the ingredients in your dish?")
-    off_df = pd.DataFrame()
-    while off_df.empty:
-        # if st.button("Generate products"):
-        # give them something to read while this loads
-        st.markdown(
-                "This may take a moment to load so in the meantime, let me provide you with some background!  \n"
-                "  \n"
-                "This application uses data from OpenFoodFacts to produce a list of products and brands.  \n" 
-                "The ingredients of these products were referenced against a list of allergens in order to determine if there are allergens present in the products.  \n"
-                "If you'd like to learn more about the OpenFoodFacts dataset we used, please visit:  \n"
-                "https://world.openfoodfacts.org/data  \n"
-                "  \n"
-                "Keep an eye on the running person in the top right corner to see if the products are still loading!"
-                    )
-
-        #### OpenFoodFacts Reference File ####
-
-        ## Using S3 Bucket ##
-        # # set up file system interface
-        # fs = s3fs.S3FileSystem(anon=False)
-        # # create definition for reading file from s3
-        # def read_file(filename):
-        #     with fs.open(filename) as f:
-        #         # only pull in certain columns
-        #         return pd.read_csv(
-        #             f, usecols=["product_name", "brands_tags", "allergens_from_dict"]
-        #         )
-        # # read the ingredient to allergen OpenFoodFacts file
-        # off_df = read_file("toridavis-test-8675309/off_products_final_df.csv")
-
-        ## Using GitHub ##
-        # read the ingredient to allergen OpenFoodFacts file
-        url = "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/datasets/off_products_final_df.csv"
-        off_df = pd.read_csv(url, usecols=["product_name", "brands_tags", "allergens_from_dict"])
-
-        # rename the columns to be more user friendly
-        off_df = off_df.rename(
-            columns={
-                "product_name": "product",
-                "brands_tags": "brand",
-                "allergens_from_dict": "allergen",
-            }
-        )
-
-    ##############################################################################
-
-    #### Node 2 - Recipe Ingredient Matching ####
+def ingredient_matching(dish_ingredients, off_df):
 
     # Get unique products from OpenFoodFacts dataframe
     unique_products = off_df['product'].unique()
@@ -341,44 +308,160 @@ def main():
     for p in products:
         print(p[0])
         off_df_curated = pd.concat([off_df_curated, off_df[off_df['product'] == p[0]]])
-    # get length of curated OFF dataset
-    off_df_curated_len = len(off_df_curated)
-    st.write("We found", off_df_curated_len, "products that may be related to your dish.")
 
-    ##############################################################################
+    return off_df_curated
 
-    #### Allergen Selection ####
+##############################################################################
+
+#### Get Image ####
+
+def get_image():
+    url = "https://github.com/tordavis/Allergen.ai/blob/main/almond.jpeg?raw=true"
+    r = requests.get(url)
+    return BytesIO(r.content)
+
+##############################################################################
+
+#### Allergen Selection ####
+
+def allergen_selection(dish, off_df_curated):
+
     # have the user choose an allergen
     user_allergen = st.selectbox("Please select an allergen to show the products containing it:", allergen14)
 
+    # if st.button("Show products"):     
     if user_allergen == "tree nuts":
-            # share picture of almond
-            st.write("Surprise!! You found app-developer, Tori's cat, Almond!")
-            st.image(get_image(), caption="Almond, the cat", width=400)
-            st.write("Almond will keep you company while the products load.") 
+        # share picture of almond
+        st.write("Surprise!! You found app-developer, Tori's cat, Almond!")
+        st.image(get_image(), caption="Almond, the cat", width=400)
+        st.write("Almond will keep you company while the products load.")   
+    # reduce OpenFoodFacts dataframe to just rows with allergen selected
+    final_df = off_df_curated.loc[off_df_curated.allergen == user_allergen]
+    # if there are no products, tell the user
+    if final_df.empty:
+        st.write(
+            "Based on the products available in our dataset, we did not find any potential ingredients in this dish containing",
+            user_allergen,"."
+        )
+    # if there are products
     else:
-            st.write("Please wait one moment while we load the products.")
+        # may not need this anymore?
+        final_df = final_df.drop_duplicates()
+        # get length of OFF dataset for allergen
+        final_df_len = len(final_df)
+        st.write("We found", final_df_len, "products containing", user_allergen,".")
+        # present a dataframe of brand, product, ingredient, and allergen
+        st.write("### Ingredients with Allergen Present", final_df.sort_index())
+    # else:
+    #     st.write("Once you press the button, products will appear here")
 
-    # if button is pressed to show products with allergens
-    # if st.button("Show allergens"):
-    # if a dish is entered
+##############################################################################
+
+#### Get Products ####
+
+def get_dish_products(dish, dish_ingredients):
+
+    st.write("#### Would you like to see the products related to the ingredients in your dish?")
+
+    if st.button("Generate products"):
+
+        # give them something to read while this loads
+        st.markdown(
+                "This may take a moment to load so in the meantime, let me provide you with some background!  \n"
+                "  \n"
+                "This application uses data from OpenFoodFacts to produce a list of products and brands.  \n" 
+                "The ingredients of these products were referenced against a list of allergens in order to determine if there are allergens present in the products.  \n"
+                "If you'd like to learn more about the OpenFoodFacts dataset we used, please visit:  \n"
+                "https://world.openfoodfacts.org/data  \n"
+                "  \n"
+                "Keep an eye on the running person in the top right corner to see if the products are still loading!"
+                    )
+        # pull in OpenFoodFacts dataset
+        off_df = off_reference()
+        # curate OFF dataset based on dish ingredients
+        off_df_curated = ingredient_matching(dish_ingredients, off_df)
+        # get length of curated OFF dataset
+        off_df_curated_len = len(off_df_curated)
+        st.write("We found", off_df_curated_len, "products that may be related to your dish.")
+
+        return off_df_curated
+
+##############################################################################
+
+#### Main function ####
+
+def main():
+
+    #### Dish Ingredients ####
+
+    # get user input for dish name
+    # add rules for what can be entered
+    # dish = st.text_input('Please enter a dish name', 'Beef Stroganoff')
+    st.write("#### Please Select one of the predetermined dishes")
+    dish = st.selectbox("Dish Options:", dish_list)
+
     if dish:
-        # reduce OpenFoodFacts dataframe to just rows with allergen selected
-        final_df = off_df_curated.loc[off_df_curated.allergen == user_allergen]
-        # if there are no products, tell the user
-        if final_df.empty:
-            st.write(
-                "Based on the products available in our dataset, we did not find any potential ingredients in this dish with",
-                user_allergen,
-            )
-        # if there are products
-        else:
-            # may not need this anymore?
-            final_df = final_df.drop_duplicates()
-            # present a dataframe of brand, product, ingredient, and allergen
-            st.write("### Ingredients with Allergen Present", final_df.sort_index())
+        # get dish ingredients based on user selection
+        dish_ingredients = dish_selection(dish)
+        # present user with the predicted ingredients
+        st.write("#### Here are the ingredients we have identified in your dish")
+        # format list into a nice bulleted markdown
+        dish_ingredients = [i.lstrip() for i in dish_ingredients]
+        for i in dish_ingredients:
+            st.markdown("- " + i)
+        st.write("#### Would you like to see the products related to the ingredients in your dish?")
+        if st.button("Generate products"):
+            # give them something to read while this loads
+            st.markdown(
+                    "This may take a moment to load so in the meantime, let me provide you with some background!  \n"
+                    "  \n"
+                    "This application uses data from OpenFoodFacts to produce a list of products and brands.  \n" 
+                    "The ingredients of these products were referenced against a list of allergens in order to determine if there are allergens present in the products.  \n"
+                    "If you'd like to learn more about the OpenFoodFacts dataset we used, please visit:  \n"
+                    "https://world.openfoodfacts.org/data  \n"
+                    "  \n"
+                    "Keep an eye on the running person in the top right corner to see if the products are still loading!"
+                        )
+            # pull in OpenFoodFacts dataset
+            off_df = off_reference()
+            # curate OFF dataset based on dish ingredients
+            off_df_curated = ingredient_matching(dish_ingredients, off_df)
+            # get length of curated OFF dataset
+            off_df_curated_len = len(off_df_curated)
+            st.write("We found", off_df_curated_len, "products that may be related to your dish.")
+            # user enters allergen
+            user_allergen = st.selectbox("Please select an allergen to show the products containing it:", allergen14)
+            # if st.button("Show products"):     
+            # if user_allergen == "tree nuts":
+            #     # share picture of almond
+            #     st.write("Surprise!! You found app-developer, Tori's cat, Almond!")
+            #     st.image(get_image(), caption="Almond, the cat", width=400)
+            #     st.write("Almond will keep you company while the products load.")   
+            # reduce OpenFoodFacts dataframe to just rows with allergen selected
+            st.write('before final_df')
+            final_df = off_df_curated.loc[off_df_curated.allergen == user_allergen]
+            # if there are no products, tell the user
+            st.write('before checking if empty')
+            if final_df.empty:
+                st.write(
+                    "Based on the products available in our dataset, we did not find any potential ingredients in this dish containing",
+                    user_allergen,"."
+                )
+            # if there are products
+            else:
+                # may not need this anymore?
+                st.write('before dropping duplicates')
+                final_df = final_df.drop_duplicates()
+                # get length of OFF dataset for allergen
+                st.write('before getting length')
+                final_df_len = len(final_df)
+                st.write("We found", final_df_len, "products containing", user_allergen,".")
+                # present a dataframe of brand, product, ingredient, and allergen
+                st.write("### Ingredients with Allergen Present", final_df.sort_index())      
     else:
-        st.write("Please enter a dish")
+        "Please select a dish."
+
+    st.button("Rerun")
 
 if __name__ == "__main__":
     main()
