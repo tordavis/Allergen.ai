@@ -20,6 +20,8 @@ import pickle
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from io import BytesIO
+import os
+import openai
 
 ##############################################################################
 
@@ -67,6 +69,8 @@ def get_image():
 
 #### Node 1 - Recipe Generator ####
 
+## Old Code ##
+
 # pull in sample node 1 output for testing purposes
 # will be replaced with code to run model on user-entered dish name
 node1_sample_url = (
@@ -88,6 +92,26 @@ node_1_output_df = node_1_output_df.assign(
 )
 # explode ingredients into their own rows
 node_1_output_exp_df = node_1_output_df.explode("model_output")
+
+
+## New Code ##
+
+# populate with angelique's key
+key = ''
+openai.api_key = key
+
+# gpt model when dish is entered
+def enter_recipe(dish):
+    prompt = 'List ingredients of ' + dish + ' in comma separated format'
+    response = openai.Completion.create(
+    model="text-davinci-003"
+    , prompt=prompt
+    , max_tokens = 170
+    , temperature = 0
+    , presence_penalty = 0
+    , frequency_penalty = 0
+    )
+    return response['choices'][0]['text']
 
 ##############################################################################
 
@@ -251,8 +275,12 @@ def main():
     #### Dish Selection ####
 
     # get user input for dish name
-    # add rules for what can be entered
     # dish = st.text_input('Please enter a dish name', 'Beef Stroganoff')
+    # add rules for what can be entered
+    # TBD
+    # run gpt code
+    # enter_recipe(dish)
+    
     st.write("#### Please Select one of the predetermined dishes")
     dish = st.selectbox("Dish Options:", dish_list)
 
