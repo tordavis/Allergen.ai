@@ -279,6 +279,37 @@ def check_products_pipeline(ingredient, products_spaces, products_underscores):
 
 ##############################################################################
 
+#### Node 2 - Recipe Ingredient Matching ####
+
+@st.cache_data
+def ingredient_matching(off_df,dish_ingredients):
+    # Get unique products from OpenFoodFacts dataframe
+    unique_products = off_df['product'].unique()
+    unique_products_series = pd.Series(unique_products)
+    unique_products_underscore_series = unique_products_series.apply(lambda x: re.sub(' ', '_', x))
+    # create a list of the matching products
+    products = []
+    for i in dish_ingredients:
+        if round_up(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.3:
+            st.write("... Retrieving food product information ...")
+        elif round_up(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.5:
+            st.write("... Comparing dish ingredients to product name ...")
+        elif round_up(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.8:
+            st.write("... Putting together the final touches ...")
+        print(i)
+        products.append(check_products_pipeline(i, unique_products_series, unique_products_underscore_series))
+    # only keep the relevant products from the OpenFoodFacts dataframe
+    off_df_curated = pd.DataFrame(columns = off_df.columns)
+    for p in products:
+        print(p[0])
+        off_df_curated = pd.concat([off_df_curated, off_df[off_df['product'] == p[0]]])
+    # get length of curated OFF dataset
+    off_df_curated_len = len(off_df_curated)
+    st.write("We found", off_df_curated_len, "products that may be related to your dish.")
+    return off_df_curated
+
+##############################################################################
+
 #### Main function ####
 
 def main():
@@ -323,16 +354,8 @@ def main():
     # while off_df.empty:
         # if st.button("Generate products"):
         # give them something to read while this loads
-    st.markdown(
-            "This may take a moment to load.  \n"
-            "  \n"
-            # "This application uses data from OpenFoodFacts to produce a list of products and brands.  \n" 
-            # "The ingredients of these products were referenced against a list of allergens in order to determine if there are allergens present in the products.  \n"
-            # "If you'd like to learn more about the OpenFoodFacts dataset we used, please visit:  \n"
-            # "https://world.openfoodfacts.org/data  \n"
-            # "  \n"
-            "Keep an eye on the running person in the top right corner to see if the products are still loading!"
-                )
+    st.write("### Now let's load the products related to your dish ingredients.")
+    st.write("This may take a moment to load.")
 
     #### OpenFoodFacts Reference File ####
 
@@ -352,31 +375,8 @@ def main():
 
     ##############################################################################
 
-    #### Node 2 - Recipe Ingredient Matching ####
 
-    # Get unique products from OpenFoodFacts dataframe
-    unique_products = off_df['product'].unique()
-    unique_products_series = pd.Series(unique_products)
-    unique_products_underscore_series = unique_products_series.apply(lambda x: re.sub(' ', '_', x))
-    # create a list of the matching products
-    products = []
-    for i in dish_ingredients:
-        if round_up(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.3:
-            st.write("... Retrieving food product information ...")
-        elif round_up(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.5:
-            st.write("... Comparing dish ingredients to product name ...")
-        elif round_up(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.8:
-            st.write("... Putting together the final touches ...")
-        print(i)
-        products.append(check_products_pipeline(i, unique_products_series, unique_products_underscore_series))
-    # only keep the relevant products from the OpenFoodFacts dataframe
-    off_df_curated = pd.DataFrame(columns = off_df.columns)
-    for p in products:
-        print(p[0])
-        off_df_curated = pd.concat([off_df_curated, off_df[off_df['product'] == p[0]]])
-    # get length of curated OFF dataset
-    off_df_curated_len = len(off_df_curated)
-    st.write("We found", off_df_curated_len, "products that may be related to your dish.")
+    off_df_curated = ingredient_matching(off_df,dish_ingredients)
 
     ##############################################################################
 
