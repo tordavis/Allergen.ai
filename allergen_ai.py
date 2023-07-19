@@ -325,6 +325,8 @@ def main():
 
     #### OpenFoodFacts Reference File ####
 
+    st.write("... Retreiving food product information ...")
+
     ## Using GitHub ##
     # read the ingredient to allergen OpenFoodFacts file
     url = "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/datasets/off_products_final_df.csv"
@@ -342,6 +344,8 @@ def main():
     ##############################################################################
 
     #### Node 2 - Recipe Ingredient Matching ####
+
+    st.write("... Matching dish ingredients to products ...")
 
     # Get unique products from OpenFoodFacts dataframe
     unique_products = off_df['product'].unique()
