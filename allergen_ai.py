@@ -66,6 +66,15 @@ def get_image():
     r = requests.get(url)
     return BytesIO(r.content)
 
+
+##############################################################################
+
+#### Round Up Function ####
+
+def round_up(n, decimals=0):
+    multiplier = 10**decimals
+    return math.ceil(n * multiplier) / multiplier
+
 ##############################################################################
 
 #### Node 1 - Recipe Generator ####
@@ -352,11 +361,11 @@ def main():
     # create a list of the matching products
     products = []
     for i in dish_ingredients:
-        if math.ceil(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.3:
+        if round_up(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.3:
             st.write("... Retrieving food product information ...")
-        elif math.ceil(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.5:
+        elif round_up(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.5:
             st.write("... Comparing dish ingredients to product name ...")
-        elif math.ceil(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.8:
+        elif round_up(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.8:
             st.write("... Putting together the final touches ...")
         print(i)
         products.append(check_products_pipeline(i, unique_products_series, unique_products_underscore_series))
