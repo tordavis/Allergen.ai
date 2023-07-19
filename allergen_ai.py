@@ -308,36 +308,36 @@ def main():
     #### Generate Products ####
     
     # st.write("#### Would you like to see the products related to the ingredients in your dish?")
-    off_df = pd.DataFrame()
-    while off_df.empty:
+    # off_df = pd.DataFrame()
+    # while off_df.empty:
         # if st.button("Generate products"):
         # give them something to read while this loads
-        st.markdown(
-                "This may take a moment to load so in the meantime, let me provide you with some background!  \n"
-                "  \n"
-                "This application uses data from OpenFoodFacts to produce a list of products and brands.  \n" 
-                "The ingredients of these products were referenced against a list of allergens in order to determine if there are allergens present in the products.  \n"
-                "If you'd like to learn more about the OpenFoodFacts dataset we used, please visit:  \n"
-                "https://world.openfoodfacts.org/data  \n"
-                "  \n"
-                "Keep an eye on the running person in the top right corner to see if the products are still loading!"
-                    )
+    st.markdown(
+            "This may take a moment to load so in the meantime, let me provide you with some background!  \n"
+            "  \n"
+            "This application uses data from OpenFoodFacts to produce a list of products and brands.  \n" 
+            "The ingredients of these products were referenced against a list of allergens in order to determine if there are allergens present in the products.  \n"
+            "If you'd like to learn more about the OpenFoodFacts dataset we used, please visit:  \n"
+            "https://world.openfoodfacts.org/data  \n"
+            "  \n"
+            "Keep an eye on the running person in the top right corner to see if the products are still loading!"
+                )
 
-        #### OpenFoodFacts Reference File ####
+    #### OpenFoodFacts Reference File ####
 
-        ## Using GitHub ##
-        # read the ingredient to allergen OpenFoodFacts file
-        url = "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/datasets/off_products_final_df.csv"
-        off_df = pd.read_csv(url, usecols=["product_name", "brands_tags", "allergens_from_dict"])
+    ## Using GitHub ##
+    # read the ingredient to allergen OpenFoodFacts file
+    url = "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/datasets/off_products_final_df.csv"
+    off_df = pd.read_csv(url, usecols=["product_name", "brands_tags", "allergens_from_dict"])
 
-        # rename the columns to be more user friendly
-        off_df = off_df.rename(
-            columns={
-                "product_name": "product",
-                "brands_tags": "brand",
-                "allergens_from_dict": "allergen",
-            }
-        )
+    # rename the columns to be more user friendly
+    off_df = off_df.rename(
+        columns={
+            "product_name": "product",
+            "brands_tags": "brand",
+            "allergens_from_dict": "allergen",
+        }
+    )
 
     ##############################################################################
 
@@ -368,13 +368,14 @@ def main():
     # have the user choose an allergen
     user_allergen = st.selectbox("Please select an allergen to show the products containing it:", allergen14)
 
+    st.write("Once an allergen is selected it will take a moment to load the products.")
+
     if user_allergen == "tree nuts":
             # share picture of almond
-            st.write("Surprise!! You found app-developer, Tori's cat, Almond!")
-            st.image(get_image(), caption="Almond, the cat", width=400)
+            st.write("Surprise!! You found our app-developer, Tori's, cat Almond!")
+            st.image(get_image(), caption="Almond, the cat... not the tree nut.", width=400)
             # st.write("Almond will keep you company while the products load.") 
-    else:
-            st.write("Please wait one moment while we load the products.")
+            
 
     # if button is pressed to show products with allergens
     # if st.button("Show allergens"):
