@@ -376,8 +376,6 @@ def main():
     # have the user choose an allergen
     user_allergen = st.selectbox("Please select an allergen to show the products containing it:", allergen14)
 
-    st.write("Once an allergen is selected it will take a moment to load the products.")
-
     if user_allergen == "tree nuts":
             # share picture of almond
             st.write("Surprise!! You found our app-developer, Tori's, cat Almond!")
