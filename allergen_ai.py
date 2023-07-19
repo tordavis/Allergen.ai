@@ -127,6 +127,7 @@ def fuzzy_string_match(ingredient, score, products):
 
   Returns: Best matching product (or none)
   """
+
   fmatch, fscore, ind = process.extractOne(
       ingredient, products, scorer=fuzz.token_sort_ratio
   )
@@ -325,8 +326,6 @@ def main():
 
     #### OpenFoodFacts Reference File ####
 
-    st.write("... Retreiving food product information ...")
-
     ## Using GitHub ##
     # read the ingredient to allergen OpenFoodFacts file
     url = "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/datasets/off_products_final_df.csv"
@@ -345,14 +344,13 @@ def main():
 
     #### Node 2 - Recipe Ingredient Matching ####
 
-    st.write("... Matching dish ingredients to products ...")
-
     # Get unique products from OpenFoodFacts dataframe
     unique_products = off_df['product'].unique()
     unique_products_series = pd.Series(unique_products)
     unique_products_underscore_series = unique_products_series.apply(lambda x: re.sub(' ', '_', x))
     # create a list of the matching products
     products = []
+    st.write("... Comparing dish ingredients to product names ...")
     for i in dish_ingredients:
         print(i)
         products.append(check_products_pipeline(i, unique_products_series, unique_products_underscore_series))
