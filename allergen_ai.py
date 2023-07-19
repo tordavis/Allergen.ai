@@ -350,8 +350,13 @@ def main():
     unique_products_underscore_series = unique_products_series.apply(lambda x: re.sub(' ', '_', x))
     # create a list of the matching products
     products = []
-    st.write("... Comparing dish ingredients to product names ...")
     for i in dish_ingredients:
+        if round(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.3:
+            st.write("... Retrieving food product information ...")
+        elif round(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.5:
+            st.write("... Comparing dish ingredients to product name ...")
+        elif round(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.8:
+            st.write("... Putting together the final touches ...")
         print(i)
         products.append(check_products_pipeline(i, unique_products_series, unique_products_underscore_series))
     # only keep the relevant products from the OpenFoodFacts dataframe
