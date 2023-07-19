@@ -66,7 +66,6 @@ def get_image():
     r = requests.get(url)
     return BytesIO(r.content)
 
-
 ##############################################################################
 
 #### Round Up Function ####
@@ -349,11 +348,6 @@ def main():
 
     #### Generate Products ####
     
-    # st.write("#### Would you like to see the products related to the ingredients in your dish?")
-    # off_df = pd.DataFrame()
-    # while off_df.empty:
-        # if st.button("Generate products"):
-        # give them something to read while this loads
     st.write("### Now let's load the products related to your dish ingredients.")
     st.write("This may take a moment to load.")
 
@@ -372,9 +366,6 @@ def main():
             "allergens_from_dict": "allergen",
         }
     )
-
-    ##############################################################################
-
 
     off_df_curated = ingredient_matching(off_df,dish_ingredients)
 
