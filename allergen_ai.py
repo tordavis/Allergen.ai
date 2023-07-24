@@ -25,6 +25,8 @@ import openai
 import math
 import time
 
+from config import key
+
 ##############################################################################
 
 ##### Page Set Up #####
@@ -107,8 +109,7 @@ node_1_output_exp_df = node_1_output_df.explode("model_output")
 
 ## New Code ##
 
-# populate with angelique's key
-key = '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'
+# populate with key from config
 openai.api_key = key
 
 # gpt model when dish is entered
@@ -319,103 +320,104 @@ def main():
 
     #### Dish Selection ####
 
-    # dish = None
-    # while dish == None:
-    #     # get user input for dish name
-    #     dish = st.text_input('Please enter a dish name')
-    #     # check if alphanumeric
-    #     alnum = dish.isalnum()
-    #     dish_len = len(dish)
-    #     if dish_len < 2:
-    #         st.write('Your dish must be longer than 2 characters')
-    #     elif alnum == False:
-    #         st.write('Your dish can only contain alphanumeric characters')
-    # if dish.isalnum() and dish_len >= 2:
-    #     # run gpt code
-    #     ingredients_comma = enter_recipe(dish)
-    #     dish_ingredients = ingredients_comma.split(",")
-    #     dish_ingredients = [i.lstrip() for i in dish_ingredients]
+    dish = None
+    while dish == None:
+        # get user input for dish name
+        dish = st.text_input('Please enter a dish name')
+        # check if alphanumeric
+        alnum = re.sub(r'[^A-Za-z0-9 ]+',' ', dish)
+        # alnum = dish.isalnum()
+        dish_len = len(dish)
+        if dish_len < 2:
+            st.write('Your dish must be longer than 2 characters')
+        elif alnum == False:
+            st.write('Your dish can only contain alphanumeric characters')
+    if alnum and dish_len >= 2:
+        # run gpt code
+        ingredients_comma = enter_recipe(dish)
+        dish_ingredients = ingredients_comma.split(",")
+        dish_ingredients = [i.lstrip() for i in dish_ingredients]
     
-    st.write("#### Please Select one of the predetermined dishes")
-    dish = st.selectbox("Dish Options:", dish_list)
+    # st.write("#### Please Select one of the predetermined dishes")
+    # dish = st.selectbox("Dish Options:", dish_list)
 
-    # will be replaced
-    # just keep node 1 results that match dish selected
-    dish_selected = node_1_output_exp_df[node_1_output_exp_df.title == dish]
+    # # will be replaced
+    # # just keep node 1 results that match dish selected
+    # dish_selected = node_1_output_exp_df[node_1_output_exp_df.title == dish]
 
-    # will be replaced
-    # convert dish ingredients to a list
-    dish_ingredients = dish_selected.model_output.tolist()
+    # # will be replaced
+    # # convert dish ingredients to a list
+    # dish_ingredients = dish_selected.model_output.tolist()
 
-    ##############################################################################
+        ##############################################################################
 
-    #### Present Dish Ingredients to Users ####
+        #### Present Dish Ingredients to Users ####
 
-    # present user with the predicted ingredients
-    st.write("### Here are the ingredients we have identified in your dish")
-    # format list into a nice bulleted markdown
-    # dish_ingredients = [i.lstrip() for i in dish_ingredients]
-    for i in dish_ingredients:
-        st.markdown("- " + i)
+        # present user with the predicted ingredients
+        st.write("### Here are the ingredients we have identified in your dish")
+        # format list into a nice bulleted markdown
+        # dish_ingredients = [i.lstrip() for i in dish_ingredients]
+        for i in dish_ingredients:
+            st.markdown("- " + i)
 
-    ##############################################################################
+        ##############################################################################
 
-    #### Generate Products ####
+        #### Generate Products ####
 
-    st.write("### Now let's load the products related to your dish ingredients.")
+        st.write("### Now let's load the products related to your dish ingredients.")
 
-    #### OpenFoodFacts Reference File ####
+        #### OpenFoodFacts Reference File ####
 
-    ## Using GitHub ##
-    # read the ingredient to allergen OpenFoodFacts file
-    url = "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/datasets/off_products_final_df.csv"
-    off_df = pd.read_csv(url, usecols=["product_name", "brands_tags", "allergens_deduped"])
-    off_df['ingredient'] = ''
-    # rename the columns to be more user friendly
-    off_df = off_df.rename(
-        columns={
-            "product_name": "product",
-            "brands_tags": "brand",
-            "allergens_deduped": "allergen",
-        }
-    )
-    # reorder columns
-    off_df = off_df[['ingredient', 'product', 'brand', 'allergen']]
-    # run ingredient matching
-    off_df_curated = ingredient_matching(off_df,dish_ingredients)
-
-    ##############################################################################
-
-    #### Allergen Selection ####
-
-
-    # have the user choose an allergen
-    user_allergen = st.selectbox("Please select an allergen to show the products containing it:", allergen14)
-
-    if user_allergen == "tree nuts":
-            # share picture of almond
-            st.write("Surprise!! You found our app-developer, Tori's, cat Almond!")
-            st.image(get_image(), caption="Almond, the cat... not the tree nut.", width=400)
-            # st.write("Almond will keep you company while the products load.") 
-        
-    # reduce OpenFoodFacts dataframe to just rows with allergen selected
-    # final_df = off_df_curated.loc[off_df_curated.allergen == user_allergen]
-    final_df = off_df_curated[off_df_curated['allergen'].str.contains(user_allergen, na=False)]
-    # if there are no products, tell the user
-    if final_df.empty:
-        st.write(
-            "Based on the products available in our dataset, we did not find any potential ingredients in this dish with",
-            user_allergen,
+        ## Using GitHub ##
+        # read the ingredient to allergen OpenFoodFacts file
+        url = "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/datasets/off_products_final_df.csv"
+        off_df = pd.read_csv(url, usecols=["product_name", "brands_tags", "allergens_deduped"])
+        off_df['ingredient'] = ''
+        # rename the columns to be more user friendly
+        off_df = off_df.rename(
+            columns={
+                "product_name": "product",
+                "brands_tags": "brand",
+                "allergens_deduped": "allergen",
+            }
         )
-    # if there are products
-    else:
-        # may not need this anymore?
-        final_df = final_df.drop_duplicates()
-        # get length of OFF dataset for allergen
-        final_df_len = len(final_df)
-        st.write("We found", final_df_len, "products containing", user_allergen,".")
-        # present a dataframe of brand, product, ingredient, and allergen
-        st.write("### Ingredients with Allergen Present", final_df.sort_index())
+        # reorder columns
+        off_df = off_df[['ingredient', 'product', 'brand', 'allergen']]
+        # run ingredient matching
+        off_df_curated = ingredient_matching(off_df,dish_ingredients)
+
+        ##############################################################################
+
+        #### Allergen Selection ####
+
+
+        # have the user choose an allergen
+        user_allergen = st.selectbox("Please select an allergen to show the products containing it:", allergen14)
+
+        if user_allergen == "tree nuts":
+                # share picture of almond
+                st.write("Surprise!! You found our app-developer, Tori's, cat Almond!")
+                st.image(get_image(), caption="Almond, the cat... not the tree nut.", width=400)
+                # st.write("Almond will keep you company while the products load.") 
+            
+        # reduce OpenFoodFacts dataframe to just rows with allergen selected
+        # final_df = off_df_curated.loc[off_df_curated.allergen == user_allergen]
+        final_df = off_df_curated[off_df_curated['allergen'].str.contains(user_allergen, na=False)]
+        # if there are no products, tell the user
+        if final_df.empty:
+            st.write(
+                "Based on the products available in our dataset, we did not find any potential ingredients in this dish with",
+                user_allergen,
+            )
+        # if there are products
+        else:
+            # may not need this anymore?
+            final_df = final_df.drop_duplicates()
+            # get length of OFF dataset for allergen
+            final_df_len = len(final_df)
+            st.write("We found", final_df_len, "products containing", user_allergen,".")
+            # present a dataframe of brand, product, ingredient, and allergen
+            st.write("### Ingredients with Allergen Present", final_df.sort_index())
 
 if __name__ == "__main__":
     main()
