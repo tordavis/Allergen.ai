@@ -82,27 +82,27 @@ def round_up(n, decimals=0):
 
 ## Old Code ##
 
-# pull in sample node 1 output for testing purposes
-# will be replaced with code to run model on user-entered dish name
-node1_sample_url = (
-    "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/davinci_112_0_1_1.csv"
-)
-node_1_output_df = pd.read_csv(node1_sample_url, usecols=["title", "model_output"])
-# make sure all ingredients are lowercase
-node_1_output_df["model_output"] = node_1_output_df["model_output"].str.lower()
-# remove new line separator
-node_1_output_df["model_output"] = node_1_output_df["model_output"].str.replace(
-    "\n", ""
-)
-# create list of dishes from sample
-dish_list = node_1_output_df.title.unique()
-# split string of ingredients
-lst_col = "model_output"
-node_1_output_df = node_1_output_df.assign(
-    **{lst_col: node_1_output_df[lst_col].str.split(",")}
-)
-# explode ingredients into their own rows
-node_1_output_exp_df = node_1_output_df.explode("model_output")
+# # pull in sample node 1 output for testing purposes
+# # will be replaced with code to run model on user-entered dish name
+# node1_sample_url = (
+#     "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/davinci_112_0_1_1.csv"
+# )
+# node_1_output_df = pd.read_csv(node1_sample_url, usecols=["title", "model_output"])
+# # make sure all ingredients are lowercase
+# node_1_output_df["model_output"] = node_1_output_df["model_output"].str.lower()
+# # remove new line separator
+# node_1_output_df["model_output"] = node_1_output_df["model_output"].str.replace(
+#     "\n", ""
+# )
+# # create list of dishes from sample
+# dish_list = node_1_output_df.title.unique()
+# # split string of ingredients
+# lst_col = "model_output"
+# node_1_output_df = node_1_output_df.assign(
+#     **{lst_col: node_1_output_df[lst_col].str.split(",")}
+# )
+# # explode ingredients into their own rows
+# node_1_output_exp_df = node_1_output_df.explode("model_output")
 
 
 ## New Code ##
@@ -304,7 +304,8 @@ def ingredient_matching(off_df,dish_ingredients):
     off_df_curated = pd.DataFrame(columns = off_df.columns)
     for p in products:
         off_df_curated = pd.concat([off_df_curated, off_df[off_df['product'] == p[1]]])
-        off_df_curated['ingredient'] = p[0]
+        if off_df_curated['product'] == p[1]:
+            off_df_curated['ingredient'] = p[0]
     # get length of curated OFF dataset
     off_df_curated_len = len(off_df_curated)
     st.write("We found", off_df_curated_len, "products that may be related to your dish.")
