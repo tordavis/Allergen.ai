@@ -25,7 +25,7 @@ import openai
 import math
 import time
 
-from config import key
+# from config import key
 
 ##############################################################################
 
