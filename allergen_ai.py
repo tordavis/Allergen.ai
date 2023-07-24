@@ -25,6 +25,8 @@ import openai
 import math
 import time
 
+# from config import key
+
 ##############################################################################
 
 ##### Page Set Up #####
@@ -109,6 +111,7 @@ def round_up(n, decimals=0):
 
 # populate with key from config
 openai.api_key = st.secrets["key"]
+# openai.api_key = key
 
 # gpt model when dish is entered
 def enter_recipe(dish):
@@ -304,8 +307,7 @@ def ingredient_matching(off_df,dish_ingredients):
     off_df_curated = pd.DataFrame(columns = off_df.columns)
     for p in products:
         off_df_curated = pd.concat([off_df_curated, off_df[off_df['product'] == p[1]]])
-        if off_df_curated['product'] == p[1]:
-            off_df_curated['ingredient'] = p[0]
+        off_df_curated.loc[off_df_curated['product'] == p[1], 'ingredient'] = p[0]
     # get length of curated OFF dataset
     off_df_curated_len = len(off_df_curated)
     st.write("We found", off_df_curated_len, "products that may be related to your dish.")
@@ -333,7 +335,7 @@ def main():
             st.write('Your dish can only contain alphanumeric characters')
     if alnum and dish_len >= 2:
         # run gpt code
-        ingredients_comma = enter_recipe(dish)
+        ingredients_comma = enter_recipe(dish).lower()
         dish_ingredients = ingredients_comma.split(",")
         dish_ingredients = [i.lstrip() for i in dish_ingredients]
     
