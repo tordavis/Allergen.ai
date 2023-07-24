@@ -23,6 +23,7 @@ from io import BytesIO
 import os
 import openai
 import math
+import time
 
 ##############################################################################
 
@@ -33,6 +34,7 @@ st.set_page_config(page_title="Allergen.ai", page_icon="🍤")
 # set up title on the web application
 st.title("Alergen.ai")
 st.header("Allergen Identifier for Food Dishes")
+st.write("#### Welcome. This tool is used for looking up potential products & brands that could in a dish recipe.")
 
 ##############################################################################
 
@@ -106,7 +108,7 @@ node_1_output_exp_df = node_1_output_df.explode("model_output")
 ## New Code ##
 
 # populate with angelique's key
-key = ''
+key = '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'
 openai.api_key = key
 
 # gpt model when dish is entered
@@ -274,7 +276,7 @@ def check_products_pipeline(ingredient, products_spaces, products_underscores):
                       if products["spellcheck_synonyms"] is not None:
                           final_product = products["spellcheck_synonyms"]
                           method = "spellcheck_synonyms"
-  return final_product, method
+  return ingredient, final_product, method
 
 ##############################################################################
 
@@ -288,20 +290,22 @@ def ingredient_matching(off_df,dish_ingredients):
     unique_products_underscore_series = unique_products_series.apply(lambda x: re.sub(' ', '_', x))
     # create a list of the matching products
     products = []
+    progress_text = "Matching ingredients to products. Please wait."
+    my_bar = st.progress(0, text=progress_text)
+    increment = math.floor(100/len(dish_ingredients))
+    percent_complete = 0
     for i in dish_ingredients:
-        if round_up(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.3:
-            st.write("... Retrieving food product information ...")
-        elif round_up(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.5:
-            st.write("... Comparing dish ingredients to product name ...")
-        elif round_up(dish_ingredients.index(i)/len(dish_ingredients), 1) == 0.8:
-            st.write("... Putting together the final touches ...")
-        print(i)
         products.append(check_products_pipeline(i, unique_products_series, unique_products_underscore_series))
+        if i == dish_ingredients[-1]:
+            percent_complete = 100
+        else:
+            percent_complete += increment
+        my_bar.progress(percent_complete, text=progress_text)
     # only keep the relevant products from the OpenFoodFacts dataframe
     off_df_curated = pd.DataFrame(columns = off_df.columns)
     for p in products:
-        print(p[0])
-        off_df_curated = pd.concat([off_df_curated, off_df[off_df['product'] == p[0]]])
+        off_df_curated = pd.concat([off_df_curated, off_df[off_df['product'] == p[1]]])
+        off_df_curated['ingredient'] = p[0]
     # get length of curated OFF dataset
     off_df_curated_len = len(off_df_curated)
     st.write("We found", off_df_curated_len, "products that may be related to your dish.")
@@ -315,72 +319,84 @@ def main():
 
     #### Dish Selection ####
 
-    # get user input for dish name
-    # dish = st.text_input('Please enter a dish name', 'Beef Stroganoff')
-    # add rules for what can be entered
-    # TBD
-    # run gpt code
-    # enter_recipe(dish)
+    dish = None
+    while dish == None:
+        # get user input for dish name
+        dish = st.text_input('Please enter a dish name')
+        # check if alphanumeric
+        res = dish.isalnum()
+        if len(dish) < 2:
+            st.write('Your dish must be longer than 2 characters')
+        elif res == False:
+            st.write('Your dish can only contain alphanumeric characters')
+    if dish:
+        # run gpt code
+        ingredients_comma = enter_recipe(dish)
+        dish_ingredients = ingredients_comma.split(",")
+        dish_ingredients = [i.lstrip() for i in dish_ingredients]
     
-    st.write("#### Please Select one of the predetermined dishes")
-    dish = st.selectbox("Dish Options:", dish_list)
+    # st.write("#### Please Select one of the predetermined dishes")
+    # dish = st.selectbox("Dish Options:", dish_list)
 
     # will be replaced
     # just keep node 1 results that match dish selected
-    dish_selected = node_1_output_exp_df[node_1_output_exp_df.title == dish]
+    # dish_selected = node_1_output_exp_df[node_1_output_exp_df.title == dish]
 
     # will be replaced
     # convert dish ingredients to a list
-    dish_ingredients = dish_selected.model_output.tolist()
+    # dish_ingredients = dish_selected.model_output.tolist()
 
     ##############################################################################
 
     #### Present Dish Ingredients to Users ####
 
-    # present user with the predicted ingredients
-    st.write("### Here are the ingredients we have identified in your dish")
-    # format list into a nice bulleted markdown
-    dish_ingredients = [i.lstrip() for i in dish_ingredients]
-    for i in dish_ingredients:
-        st.markdown("- " + i)
+    if dish:
+        # present user with the predicted ingredients
+        st.write("### Here are the ingredients we have identified in your dish")
+        # format list into a nice bulleted markdown
+        # dish_ingredients = [i.lstrip() for i in dish_ingredients]
+        for i in dish_ingredients:
+            st.markdown("- " + i)
 
     ##############################################################################
 
     #### Generate Products ####
-    
-    st.write("### Now let's load the products related to your dish ingredients.")
-    st.write("This may take a moment to load.")
+    if dish:
+        st.write("### Now let's load the products related to your dish ingredients.")
 
-    #### OpenFoodFacts Reference File ####
+        #### OpenFoodFacts Reference File ####
 
-    ## Using GitHub ##
-    # read the ingredient to allergen OpenFoodFacts file
-    url = "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/datasets/off_products_final_df.csv"
-    off_df = pd.read_csv(url, usecols=["product_name", "brands_tags", "allergens_from_dict"])
-
-    # rename the columns to be more user friendly
-    off_df = off_df.rename(
-        columns={
-            "product_name": "product",
-            "brands_tags": "brand",
-            "allergens_from_dict": "allergen",
-        }
-    )
-
-    off_df_curated = ingredient_matching(off_df,dish_ingredients)
+        ## Using GitHub ##
+        # read the ingredient to allergen OpenFoodFacts file
+        url = "https://raw.githubusercontent.com/tordavis/Allergen.ai/main/datasets/off_products_final_df.csv"
+        off_df = pd.read_csv(url, usecols=["product_name", "brands_tags", "allergens_deduped"])
+        off_df['ingredient'] = ''
+        # rename the columns to be more user friendly
+        off_df = off_df.rename(
+            columns={
+                "product_name": "product",
+                "brands_tags": "brand",
+                "allergens_deduped": "allergen",
+            }
+        )
+        # reorder columns
+        off_df = off_df[['ingredient', 'product', 'brand', 'allergen']]
+        # run ingredient matching
+        off_df_curated = ingredient_matching(off_df,dish_ingredients)
 
     ##############################################################################
 
     #### Allergen Selection ####
 
-    # have the user choose an allergen
-    user_allergen = st.selectbox("Please select an allergen to show the products containing it:", allergen14)
+    if dish:
+        # have the user choose an allergen
+        user_allergen = st.selectbox("Please select an allergen to show the products containing it:", allergen14)
 
-    if user_allergen == "tree nuts":
-            # share picture of almond
-            st.write("Surprise!! You found our app-developer, Tori's, cat Almond!")
-            st.image(get_image(), caption="Almond, the cat... not the tree nut.", width=400)
-            # st.write("Almond will keep you company while the products load.") 
+        if user_allergen == "tree nuts":
+                # share picture of almond
+                st.write("Surprise!! You found our app-developer, Tori's, cat Almond!")
+                st.image(get_image(), caption="Almond, the cat... not the tree nut.", width=400)
+                # st.write("Almond will keep you company while the products load.") 
             
 
     # if button is pressed to show products with allergens
@@ -405,8 +421,6 @@ def main():
             st.write("We found", final_df_len, "products containing", user_allergen,".")
             # present a dataframe of brand, product, ingredient, and allergen
             st.write("### Ingredients with Allergen Present", final_df.sort_index())
-    else:
-        st.write("Please enter a dish")
 
 if __name__ == "__main__":
     main()
