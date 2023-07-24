@@ -25,8 +25,6 @@ import openai
 import math
 import time
 
-# from config import key
-
 ##############################################################################
 
 ##### Page Set Up #####
@@ -110,7 +108,7 @@ node_1_output_exp_df = node_1_output_df.explode("model_output")
 ## New Code ##
 
 # populate with key from config
-openai.api_key = key
+openai.api_key = st.secrets["key"]
 
 # gpt model when dish is entered
 def enter_recipe(dish):
