@@ -36,7 +36,8 @@ st.set_page_config(page_title="Allergen.ai", page_icon="🍤")
 # set up title on the web application
 st.title("Alergen.ai")
 st.header("Allergen Identifier for Food Dishes")
-st.write("#### Welcome. This tool is used for looking up potential products & brands that could in a dish recipe.")
+st.write("#### Welcome. This tool is used for looking up potential products & brands that could be in a dish recipe.")
+st.write("If you would like to learn more about this project, please visit allergen-ai.webflow.io")
 
 ##############################################################################
 
@@ -310,7 +311,7 @@ def ingredient_matching(off_df,dish_ingredients):
         off_df_curated.loc[off_df_curated['product'] == p[1], 'ingredient'] = p[0]
     # get length of curated OFF dataset
     off_df_curated_len = len(off_df_curated)
-    st.write("We found", off_df_curated_len, "products that may be related to your dish.")
+    st.write("Based on the ingredients in your dish, we found", off_df_curated_len, "products from different brands that could be used in your dish.")
     return off_df_curated
 
 ##############################################################################
@@ -418,6 +419,7 @@ def main():
             final_df_len = len(final_df)
             st.write("We found", final_df_len, "products containing", user_allergen,".")
             # present a dataframe of brand, product, ingredient, and allergen
+            final_df.set_index(final_df.columns[0])
             st.write("### Ingredients with Allergen Present", final_df.sort_index())
 
 if __name__ == "__main__":
