@@ -37,7 +37,7 @@ st.set_page_config(page_title="Allergen.ai", page_icon="🍤")
 st.title("Alergen.ai")
 st.header("Allergen Identifier for Food Dishes")
 st.write("#### Welcome. This tool is used for looking up potential products & brands that could be in a dish recipe.")
-st.write("If you would like to learn more about this project, please visit allergen-ai.webflow.io")
+st.write("If you would like to learn more about this project, please visit [our website](allergen-ai.webflow.io)")
 
 ##############################################################################
 
