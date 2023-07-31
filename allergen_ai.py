@@ -32,9 +32,9 @@ import time
 ##### Page Set Up #####
 
 # set up page name
-st.set_page_config(page_title="Allergen.ai", page_icon="🍤")
+st.set_page_config(page_title="AllerGen.ai", page_icon="🍤")
 # set up title on the web application
-st.title("Alergen.ai")
+st.title("AllerGen.ai")
 st.header("Allergen Identifier for Food Dishes")
 st.write("#### Welcome. This tool is used for looking up potential products & brands that could be in a dish recipe.")
 st.write("If you would like to learn more about this project, please visit [our website](https://allergen-ai.webflow.io/)")
