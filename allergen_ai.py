@@ -404,7 +404,7 @@ def main():
             
         # reduce OpenFoodFacts dataframe to just rows with allergen selected
         if user_allergen == 'none':
-            user_allergen == ''
+            user_allergen == False
         final_df = off_df_curated[off_df_curated['allergen'].str.contains(user_allergen, na=False)]
         # if there are no products, tell the user
         if final_df.empty:
