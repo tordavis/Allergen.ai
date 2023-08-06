@@ -403,7 +403,8 @@ def main():
                 # st.write("Almond will keep you company while the products load.") 
             
         # reduce OpenFoodFacts dataframe to just rows with allergen selected
-        # final_df = off_df_curated.loc[off_df_curated.allergen == user_allergen]
+        if user_allergen == 'none':
+            user_allergen == ''
         final_df = off_df_curated[off_df_curated['allergen'].str.contains(user_allergen, na=False)]
         # if there are no products, tell the user
         if final_df.empty:
