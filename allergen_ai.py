@@ -54,6 +54,7 @@ allergen14 = [
     "milk",
     "molluscs",
     "mustard",
+    "",
     "peanuts",
     "sesame",
     "soy",
