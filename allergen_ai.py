@@ -402,6 +402,8 @@ def main():
                 st.image(get_image(), caption="Almond, the cat... not the tree nut.", width=400)
                 # st.write("Almond will keep you company while the products load.") 
             
+        if user_allergen == "none":
+            final_df = off_df_curated[off_df_curated['allergen'] == '']
         # reduce OpenFoodFacts dataframe to just rows with allergen selected
         final_df = off_df_curated[off_df_curated['allergen'].str.contains(user_allergen, na=False)]
         # if there are no products, tell the user
