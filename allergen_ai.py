@@ -396,14 +396,16 @@ def main():
         # have the user choose an allergen
         user_allergen = st.selectbox("Please select an allergen to show the products containing it:", allergen14)
 
+        off_df_curated.fillna('none', inplace=True)
+
         if user_allergen == "tree nuts":
                 # share picture of almond
                 st.write("Surprise!! You found our app-developer, Tori's, cat Almond!")
                 st.image(get_image(), caption="Almond, the cat... not the tree nut.", width=400)
                 # st.write("Almond will keep you company while the products load.") 
             
-        if user_allergen == "none":
-            final_df = off_df_curated[off_df_curated['allergen'].str.contains(na=True)]
+        # if user_allergen == "none":
+        #     final_df = off_df_curated[off_df_curated['allergen'].str.contains(na=True)]
         # reduce OpenFoodFacts dataframe to just rows with allergen selected
         final_df = off_df_curated[off_df_curated['allergen'].str.contains(user_allergen, na=False)]
         # if there are no products, tell the user
