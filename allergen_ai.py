@@ -403,7 +403,7 @@ def main():
                 # st.write("Almond will keep you company while the products load.") 
             
         if user_allergen == "none":
-            final_df = off_df_curated[off_df_curated['allergen'].isna().any()]
+            final_df = off_df_curated[off_df_curated['allergen'].isnull().any(axis=1)]
         # reduce OpenFoodFacts dataframe to just rows with allergen selected
         final_df = off_df_curated[off_df_curated['allergen'].str.contains(user_allergen, na=False)]
         # if there are no products, tell the user
